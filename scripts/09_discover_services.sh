@@ -14,7 +14,7 @@ systemctl list-units --type=service --state=running --no-pager --no-legend 2>/de
 section "监听端口及归属进程 (每个监听端口背后都是一个组件)"
 ss -tlnp 2>/dev/null | head -60
 
-section "Java 进程明细 (海康平台是微服务架构,每个java进程是一个组件)"
+section "Java 进程明细 (微服务环境里,每个 java 进程通常对应一个组件)"
 ps -eo pid,pcpu,pmem,args --sort=-pcpu | grep '[j]ava' | \
   awk '{printf "PID=%s CPU=%s%% MEM=%s%% ", $1,$2,$3;
         for(i=4;i<=NF;i++) if($i ~ /-Dapp|-Dname|\.jar$|catalina/) printf "%s ", $i; print ""}' | head -30
@@ -29,9 +29,8 @@ section "部署目录盘点"
 for d in /opt /usr/local /home /data /app; do
   [ -d "$d" ] && echo "--- $d ---" && ls -1 "$d" 2>/dev/null | head -20
 done
-echo "--- 海康组件目录 ---"
-ls -1 /opt/hikvision* 2>/dev/null | head -40 || true
-find /opt/hikvision* -maxdepth 1 -type d 2>/dev/null | head -40
+echo "--- 常见厂商/业务组件目录 ---"
+find /opt /app /data -maxdepth 2 -type d \( -iname '*pgsql*' -o -iname '*postgres*' -o -iname '*redis*' -o -iname '*tomcat*' -o -iname '*java*' -o -iname '*app*' -o -iname '*service*' \) 2>/dev/null | head -40
 
 section "开机自启服务 (systemd enabled + chkconfig)"
 systemctl list-unit-files --type=service --state=enabled --no-pager --no-legend 2>/dev/null | head -40

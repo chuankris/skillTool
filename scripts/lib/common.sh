@@ -12,10 +12,10 @@ detect_psql() {
   [ -n "${PSQL_BIN:-}" ] && [ -x "$PSQL_BIN" ] && return 0
   local c
   for c in /usr/bin/psql /usr/pgsql-11/bin/psql /usr/local/pgsql/bin/psql \
-           /opt/pgsql*/bin/psql /opt/hikvision/*/pgsql*/bin/psql; do
+           /opt/pgsql*/bin/psql /opt/postgres*/bin/psql /app/*/pgsql*/bin/psql /data/*/pgsql*/bin/psql; do
     [ -x "$c" ] && PSQL_BIN="$c" && return 0
   done
-  # 从正在运行的 postgres 主进程的可执行文件路径推断(海康环境最可靠的方法)
+  # 从正在运行的 postgres 主进程的可执行文件路径推断(定制化安装环境里通常最可靠)
   local pgpid pgbin
   pgpid=$(ps -eo pid,comm,args | grep -E '[p]ostgres|[p]ostmaster' | awk 'NR==1{print $1}')
   if [ -n "$pgpid" ] && [ -r "/proc/$pgpid/exe" ]; then
@@ -40,7 +40,7 @@ detect_redis_cli() {
   [ -n "${REDIS_CLI_BIN:-}" ] && [ -x "$REDIS_CLI_BIN" ] && return 0
   local c rpid
   for c in /usr/bin/redis-cli /usr/local/bin/redis-cli /opt/redis*/bin/redis-cli \
-           /opt/hikvision/*/redis*/bin/redis-cli; do
+           /opt/*/redis*/bin/redis-cli /app/*/redis*/bin/redis-cli /data/*/redis*/bin/redis-cli; do
     [ -x "$c" ] && REDIS_CLI_BIN="$c" && return 0
   done
   rpid=$(ps -eo pid,comm | grep '[r]edis-server' | awk 'NR==1{print $1}')

@@ -13,7 +13,7 @@ compatibility: 本机需有 ssh/scp(可选 sshpass)。目标服务器 CentOS 7,b
 ## 背景
 
 典型场景:外部接口 20 并发调用时服务器 CPU 飙到 80%+。技术栈:CentOS 7 + PostgreSQL 11
-(海康平台自带,进程名 `hik.postgresql11`,路径可能非标准)+ Redis + Tomcat。
+(平台自带 PostgreSQL 11,进程名和安装路径可能非标准)+ Redis + Tomcat。
 不要预设原因——可能是慢 SQL,也可能是磁盘 IO、GC、连接风暴。先分型,再深入。
 
 ## 准备工作(只做一次)
@@ -24,9 +24,9 @@ compatibility: 本机需有 ssh/scp(可选 sshpass)。目标服务器 CentOS 7,b
      再以环境变量方式传入(如 `PGUSER=xxx PGPASSWORD=xxx bash run_remote.sh ...`),
      同样不落盘。
    - 非敏感项(服务器 IP、端口、业务库名)询问后写入 `scripts/config.env` 免得重复问。
-   业务库名说明:该环境是海康平台,有几十个库(acps_acpsdb、eportal_portaldb 等),
+   业务库名说明:该环境可能有几十个业务库(如 app_coredb、portal_db 等),
    让用户指定接口主要打到哪个库;不确定就先填 postgres,慢 SQL 统计是全实例的、自动带库名。
-   `PSQL_BIN` 不必问——海康环境 psql 通常不在 PATH 和环境变量里,留空即可,
+   `PSQL_BIN` 不必问——定制化环境里的 psql 通常不在 PATH 和环境变量里,留空即可,
    脚本会自动上服务器搜索(进程路径推断 + find),00 的输出会给出找到的路径,
    找到后把它写回 config.env 避免每次重搜。
 2. 执行环境探测:`bash scripts/run_remote.sh 00_check_env.sh`
@@ -101,7 +101,7 @@ bash scripts/run_remote.sh 08_misc_check.sh           # 矿马/软中断/降频/
 ## 组件自动发现与自主推理排查(重要,固定脚本之外的兜底)
 
 固定脚本只覆盖 PG/Redis/Tomcat/系统层。真实服务器上往往还部署了别的东西
-(该海康平台就是几十个 Java 微服务 + artemis 消息队列 + Elasticsearch 等),
+(这类环境通常是几十个 Java 微服务 + artemis 消息队列 + Elasticsearch 等),
 排查不能被固定脚本框住。流程:
 
 1. 执行 `bash scripts/run_remote.sh 09_discover_services.sh` 拿到部署清单:
@@ -190,7 +190,7 @@ bash scripts/run_remote.sh 08_misc_check.sh           # 矿马/软中断/降频/
   用户明确同意的配置修改。不要擅自重启任何服务。
 - PG 是 11 版本:pg_stat_statements 字段是 `total_time`/`mean_time`
   (PG13+ 改名 `total_exec_time`,脚本已按 11 写,勿改)。
-- 海康自带 PG 的 psql 不在 PATH 里是常态,00 脚本会探测;若探测失败,
+- 定制环境自带 PG 的 psql 不在 PATH 里是常态,00 脚本会探测;若探测失败,
   用 `find / -name psql -type f 2>/dev/null` 让用户确认。
 - jstack 可能不存在(只装了 JRE):04 脚本会自动降级为 `kill -3`(线程 dump 输出到
   catalina.out,无害)。
